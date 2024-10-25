@@ -84,15 +84,15 @@ void order_coffee() {
     float coin;
     printf("The selected coffee costs %.2f AED. Please insert coins.\n", selected_price);
     while (total_inserted < selected_price) {
-        printf("Enter coin (e.g., 0.5, 1, 2): ");
+        printf("Enter coin (0.5 or 1 AED): ");
         scanf("%f", &coin);
-        
-        // Validate the coin (assuming valid coins are 0.5, 1, 2 AED)
-        if (coin == 0.5 || coin == 1 || coin == 2) {
+
+        // Validate the coin (only accept 0.5 or 1 AED)
+        if (coin == 0.5 || coin == 1) {
             total_inserted += coin;
             printf("Total inserted: %.2f AED\n", total_inserted);
         } else {
-            printf("Invalid coin. Please insert 0.5, 1, or 2 AED coins only.\n");
+            printf("Invalid coin. Please insert 0.5 or 1 AED coins only.\n");
         }
 
         // Check if enough money has been inserted
