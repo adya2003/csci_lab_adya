@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>  // For strcmp function
+#include <string.h>  
 #include <stdbool.h>
 
-// Define constants
 #define BEANS_REQ 8
 #define WATER_ESPRESSO 30
 #define WATER_CAPPUCCINO 30
@@ -14,34 +13,30 @@
 
 #define ADMIN_PASSWORD "1234"
 
-// Global variables for ingredient quantities and prices
-float total_sales = 0.0;  // Total sales initialized to 0
-int coffee_beans = 100;  // Coffee beans available
-int water = 500;         // Water available
-int milk = 300;          // Milk available
-int chocolate_syrup = 100; // Chocolate syrup available
-float espresso_price = 3.5; // Price of espresso
-float cappuccino_price = 4.5; // Price of cappuccino
-float mocha_price = 5.5; // Price of mocha
+float total_sales = 0.0;  
+int coffee_beans = 100;  
+int water = 500;        
+int milk = 300;          
+int chocolate_syrup = 100;
+float espresso_price = 3.5; 
+float cappuccino_price = 4.5; 
+float mocha_price = 5.5;
 
-// Function to check availability of ingredients
 int check_availability(int water_needed, int milk_needed, int syrup_needed) {
     if (coffee_beans < BEANS_REQ || water < water_needed || milk < milk_needed || chocolate_syrup < syrup_needed) {
         printf("Sorry, not enough ingredients to make this coffee.\n");
-        return 0;  // Not enough ingredients
-    }
-    return 1;  // Ingredients available
+        return 0;
+    } 
+    return 1;  
 }
 
-// Function to prepare coffee
 void prepare_coffee(int water_needed, int milk_needed, int syrup_needed) {
-    coffee_beans -= BEANS_REQ;  // Reduce coffee beans
-    water -= water_needed;        // Reduce water
-    milk -= milk_needed;          // Reduce milk
-    chocolate_syrup -= syrup_needed; // Reduce chocolate syrup
+    coffee_beans -= BEANS_REQ; 
+    water -= water_needed;        
+    milk -= milk_needed;          
+    chocolate_syrup -= syrup_needed; 
 }
 
-// Function to order coffee with coin input
 void order_coffee() {
     int choice;
     printf("1. Espresso - %.2f AED\n", espresso_price);
@@ -53,25 +48,25 @@ void order_coffee() {
     float selected_price = 0.0;
 
     switch (choice) {
-        case 1: // Espresso
+        case 1:
             if (check_availability(WATER_ESPRESSO, 0, 0)) {
                 selected_price = espresso_price;
             } else {
-                return; // Exit if ingredients are insufficient
+                return; 
             }
             break;
-        case 2: // Cappuccino
+        case 2: 
             if (check_availability(WATER_CAPPUCCINO, MILK_CAPPUCCINO, 0)) {
                 selected_price = cappuccino_price;
             } else {
-                return; // Exit if ingredients are insufficient
+                return; 
             }
             break;
-        case 3: // Mocha
+        case 3: 
             if (check_availability(WATER_MOCHA, MILK_MOCHA, CHOCOLATE_SYRUP_MOCHA)) {
                 selected_price = mocha_price;
             } else {
-                return; // Exit if ingredients are insufficient
+                return; 
             }
             break;
         default:
@@ -79,7 +74,6 @@ void order_coffee() {
             return;
     }
 
-    // Prompt user to insert coins until the price is met
     float total_inserted = 0.0;
     float coin;
     printf("The selected coffee costs %.2f AED. Please insert coins.\n", selected_price);
@@ -87,7 +81,6 @@ void order_coffee() {
         printf("Enter coin (0.5 or 1 AED): ");
         scanf("%f", &coin);
 
-        // Validate the coin (only accept 0.5 or 1 AED)
         if (coin == 0.5 || coin == 1) {
             total_inserted += coin;
             printf("Total inserted: %.2f AED\n", total_inserted);
@@ -95,12 +88,10 @@ void order_coffee() {
             printf("Invalid coin. Please insert 0.5 or 1 AED coins only.\n");
         }
 
-        // Check if enough money has been inserted
         if (total_inserted >= selected_price) {
             float change = total_inserted - selected_price;
             printf("Thank you! Preparing your coffee...\n");
 
-            // Prepare the selected coffee
             switch (choice) {
                 case 1:
                     prepare_coffee(WATER_ESPRESSO, 0, 0);
@@ -116,18 +107,16 @@ void order_coffee() {
                     break;
             }
 
-            // Give change if any
             if (change > 0) {
                 printf("Returning change: %.2f AED\n", change);
             }
 
-            total_sales += selected_price; // Update total sales
-            return; // Exit after serving coffee
+            total_sales += selected_price; 
+            return;
         }
     }
 }
 
-// Function for admin mode to check and refill ingredients
 void admin_mode() {
     char password[20];
     printf("Enter admin password: ");
@@ -135,7 +124,7 @@ void admin_mode() {
 
     if (strcmp(password, ADMIN_PASSWORD) != 0) {
         printf("Incorrect password.\n");
-        return;  // Exit if password is incorrect
+        return;  
     }
 
     int choice;
@@ -151,10 +140,10 @@ void admin_mode() {
             printf("Total sales: %.2f AED\n", total_sales);
             break;
         case 2:
-            coffee_beans = 100;       // Refill coffee beans
-            water = 500;              // Refill water
-            milk = 300;               // Refill milk
-            chocolate_syrup = 100;    // Refill chocolate syrup
+            coffee_beans = 100;       
+            water = 500;             
+            milk = 300;           
+            chocolate_syrup = 100;    
             printf("Ingredients refilled.\n");
             break;
         case 3:
@@ -171,7 +160,6 @@ void admin_mode() {
     }
 }
 
-// Main function
 int main() {
     int mode;
 
@@ -191,11 +179,11 @@ int main() {
                 break;
             case 3:
                 printf("Exiting program. Goodbye!\n");
-                return 0; // Exit program
+                return 0; 
             default:
                 printf("Invalid choice. Please try again.\n");
         }
     }
 
-    return 0; // Return 0 for successful execution
+    return 0; 
 }
