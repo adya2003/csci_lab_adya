@@ -18,30 +18,28 @@
 #define LOW_MILK 60
 #define LOW_CHOCOLATE 20
 
-float total_sales = 0.0; 
-int coffee_beans = 100;  
-int water = 500;        
-int milk = 300;          
-int chocolate_syrup = 100; 
-float espresso_price = 3.5; 
-float cappuccino_price = 4.5; 
-float mocha_price = 5.5; 
-
+float total_sales = 0.0;
+int coffee_beans = 100;
+int water = 500;
+int milk = 300;
+int chocolate_syrup = 100;
+float espresso_price = 3.5;
+float cappuccino_price = 4.5;
+float mocha_price = 5.5;
 
 int check_availability(int water_needed, int milk_needed, int syrup_needed) {
     if (coffee_beans < BEANS_REQ || water < water_needed || milk < milk_needed || chocolate_syrup < syrup_needed) {
         printf("Sorry, not enough ingredients to make this coffee.\n");
-        return 0;  
+        return 0;
     }
-    return 1;  
+    return 1;
 }
 
-
 void prepare_coffee(int water_needed, int milk_needed, int syrup_needed) {
-    coffee_beans -= BEANS_REQ;  
-    water -= water_needed;        
-    milk -= milk_needed;         
-    chocolate_syrup -= syrup_needed; 
+    coffee_beans -= BEANS_REQ;
+    water -= water_needed;
+    milk -= milk_needed;
+    chocolate_syrup -= syrup_needed;
 
     if (coffee_beans <= LOW_BEANS) {
         printf("Alert: Coffee beans are running low!\n");
@@ -73,25 +71,25 @@ void order_coffee() {
     float selected_price = 0.0;
 
     switch (choice) {
-        case 1: 
+        case 1:
             if (check_availability(WATER_ESPRESSO, 0, 0)) {
                 selected_price = espresso_price;
             } else {
-                return; 
+                return;
             }
             break;
         case 2:
             if (check_availability(WATER_CAPPUCCINO, MILK_CAPPUCCINO, 0)) {
                 selected_price = cappuccino_price;
             } else {
-                return; 
+                return;
             }
             break;
-        case 3: 
+        case 3:
             if (check_availability(WATER_MOCHA, MILK_MOCHA, CHOCOLATE_SYRUP_MOCHA)) {
                 selected_price = mocha_price;
             } else {
-                return; 
+                return;
             }
             break;
         default:
@@ -129,7 +127,6 @@ void order_coffee() {
         }
 
         if (total_inserted >= selected_price) {
-            float change = total_inserted - selected_price;
             printf("Thank you! Preparing your coffee...\n");
 
             switch (choice) {
@@ -147,12 +144,8 @@ void order_coffee() {
                     break;
             }
 
-            if (change > 0) {
-                printf("Returning change: %.2f AED\n", change);
-            }
-
-            total_sales += selected_price; 
-            return; 
+            total_sales += selected_price;
+            return;
         }
     }
 }
@@ -164,7 +157,7 @@ void admin_mode() {
 
     if (strcmp(password, ADMIN_PASSWORD) != 0) {
         printf("Incorrect password.\n");
-        return;  
+        return;
     }
 
     int choice;
@@ -183,10 +176,10 @@ void admin_mode() {
                 printf("Total sales: %.2f AED\n", total_sales);
                 break;
             case 2:
-                coffee_beans = 100;       
-                water = 500;              
-                milk = 300;              
-                chocolate_syrup = 100;    
+                coffee_beans = 100;
+                water = 500;
+                milk = 300;
+                chocolate_syrup = 100;
                 printf("Ingredients refilled.\n");
                 break;
             case 3:
@@ -203,7 +196,7 @@ void admin_mode() {
                 printf("Total sales reset. Remember to collect the money from the machine.\n");
                 break;
             case 0:
-                return; 
+                return;
             default:
                 printf("Invalid choice.\n");
         }
@@ -229,11 +222,11 @@ int main() {
                 break;
             case 3:
                 printf("Exiting program. Goodbye!\n");
-                return 0; 
+                return 0;
             default:
                 printf("Invalid choice. Please try again.\n");
         }
     }
 
-    return 0; 
+    return 0;
 }
