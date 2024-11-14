@@ -1,105 +1,63 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#define SIZE 24
-#define nRows 8
-#define nCols 3
-
-void print_array(int array[], int length);
-void print_matrix(int mat[][nCols], int rows);
+// Function declarations
 bool isValid(const int arr[], int length, int pos);
 void remove_element(int arr[], int length, int pos);
 void insert_element(int arr[], int length, int pos, int value);
 void reshape(const int arr[], int length, int nRows, int nCols, int arr2d[nRows][nCols]);
-void trans_matrix(int nRows, int nCols, const int mat[nRows][nCols], int mat_trans[nCols][nRows]);
+void trans_matrix(int nRows, int nCols, const int mat[nRows][nCols], int mat_transp[nCols][nRows]);
 bool found_duplicate(int arr[], int length);
 
-int main() {
-    int arr[SIZE] = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120,
-                     130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240};
-    int arr2d[nRows][nCols];
-
-    printf("Original array:\n");
-    print_array(arr, SIZE);
-
-    remove_element(arr, SIZE, 2);
-    printf("\nArray after removing element at index 2:\n");
-    print_array(arr, SIZE - 1);
-
-    insert_element(arr, SIZE - 1, 2, 85);
-    printf("\nArray after inserting 85 at index 2:\n");
-    print_array(arr, SIZE);
-
-    printf("\nReshaped 2D array:\n");
-    reshape(arr, SIZE, nRows, nCols, arr2d);
-    print_matrix(arr2d, nRows);
-
-    int mat_trans[nCols][nRows];
-    printf("\nTransposed matrix:\n");
-    trans_matrix(nRows, nCols, arr2d, mat_trans);
-    print_matrix(mat_trans, nCols);
-
-    bool has_duplicate = found_duplicate(arr, SIZE);
-    printf("\nArray has duplicate: %s\n", has_duplicate ? "Yes" : "No");
-
-    return 0;
-}
-
-void print_array(int array[], int length) {
-    for (int i = 0; i < length; i++)
-        printf("array[%d] = %d\n", i, array[i]);
-}
-
-void print_matrix(int mat[][nCols], int rows) {
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < nCols; j++)
-            printf("mat[%d][%d] = %d ", i, j, mat[i][j]);
-        printf("\n");
-    }
-}
-
+// Function definitions
 bool isValid(const int arr[], int length, int pos) {
     return (pos >= 0 && pos < length);
 }
 
 void remove_element(int arr[], int length, int pos) {
     if (!isValid(arr, length, pos)) {
-        printf("Invalid index for removal.\n");
+        printf("Invalid position.\n");
         return;
     }
     for (int i = pos; i < length - 1; i++) {
         arr[i] = arr[i + 1];
     }
-    arr[length - 1] = 0; 
+    printf("Element removed successfully.\n");
 }
 
 void insert_element(int arr[], int length, int pos, int value) {
-    if (!isValid(arr, length, pos)) {
-        printf("Invalid index for insertion.\n");
+    if (!isValid(arr, length + 1, pos)) {
+        printf("Invalid position.\n");
         return;
     }
-    for (int i = length - 1; i > pos; i--) {
+    for (int i = length; i > pos; i--) {
         arr[i] = arr[i - 1];
     }
     arr[pos] = value;
+    printf("Element inserted successfully.\n");
 }
 
 void reshape(const int arr[], int length, int nRows, int nCols, int arr2d[nRows][nCols]) {
     if (length != nRows * nCols) {
-        printf("Reshape error: Array size mismatch.\n");
+        printf("Invalid dimensions for reshape.\n");
         return;
     }
-    for (int i = 0; i < length; i++) {
-        arr2d[i / nCols][i % nCols] = arr[i];
-    }
-}
-
-void trans_matrix(int nRows, int nCols, const int mat[nRows][nCols], int mat_trans[nCols][nRows]) {
-    for (int i = 0; i < nRows; i++) {
-        for (int j = 0; j < nCols; j++) {
-            mat_trans[j][i] = mat[i][j];
+    int index = 0;
+    for (int col = 0; col < nCols; col++) {
+        for (int row = 0; row < nRows; row++) {
+            arr2d[row][col] = arr[index++];
         }
     }
+    printf("Array reshaped successfully.\n");
+}
+
+void trans_matrix(int nRows, int nCols, const int mat[nRows][nCols], int mat_transp[nCols][nRows]) {
+    for (int row = 0; row < nRows; row++) {
+        for (int col = 0; col < nCols; col++) {
+            mat_transp[col][row] = mat[row][col];
+        }
+    }
+    printf("Matrix transposed successfully.\n");
 }
 
 bool found_duplicate(int arr[], int length) {
@@ -112,3 +70,43 @@ bool found_duplicate(int arr[], int length) {
     }
     return false;
 }
+
+// Main function
+int main() {
+    int arr[] = {10, 20, 30, 40, 50};
+    int length = 5;
+
+    printf("Testing remove_element:\n");
+    remove_element(arr, length, 2); // Removes element at index 2
+    for (int i = 0; i < length - 1; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    printf("Testing insert_element:\n");
+    insert_element(arr, length - 1, 2, 80); // Inserts 80 at index 2
+    for (int i = 0; i < length; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    printf("Testing reshape:\n");
+    int arr2d[2][3];
+    reshape(arr, 6, 2, 3, arr2d);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 3; j++) {
+            printf("%d ", arr2d[i][j]);
+        }
+        printf("\n");
+    }
+
+    printf("Testing found_duplicate:\n");
+    if (found_duplicate(arr, length)) {
+        printf("Duplicates found.\n");
+    } else {
+        printf("No duplicates found.\n");
+    }
+
+    return 0;
+}
+
