@@ -1,79 +1,42 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 
 #define NUM_TEAMS 3
 #define SQUAD_SIZE 5
 
-typedef struct {
-    char name[26];
+struct Player {
+    char name[50];
     int kitNumber;
-    char club[26];
-    struct {
-        int day, month, year;
-    } dob;
-    char position[16];
-} player_t;
+    int age;
+};
 
-typedef struct {
-    char name[21];
-    player_t players[SQUAD_SIZE];
+struct Team {
+    char name[50];
+    struct Player players[SQUAD_SIZE];
     int activeSize;
-} team_t;
+};
 
-void display_menu() {
-    printf("1. Enroll Club\n");
-    printf("2. Add Player\n");
-    printf("3. Search and Update Player\n");
-    printf("4. Display Club Statistics\n");
-    printf("0. Exit\n");
-}
+int main() {
+    struct Team teams[NUM_TEAMS];
+    int teamCount = 0;
 
-void enroll_club(team_t teams[], int *teamCount) {
-    if (*teamCount >= NUM_TEAMS) {
-        printf("Maximum number of clubs reached.\n");
-        return;
-    }
-    printf("Enter club name: ");
-    scanf("%s", teams[*teamCount].name);
-    teams[*teamCount].activeSize = 0;
-    (*teamCount)++;
-}
+    // Example of enrolling a team
+    strcpy(teams[teamCount].name, "Team A");
+    teams[teamCount].activeSize = 0;
+    teamCount++;
 
-void add_player(team_t teams[], int teamCount) {
-    if (teamCount == 0) {
-        printf("No teams available. Enroll a club first.\n");
-        return;
-    }
+    // Example of adding a player
+    strcpy(teams[0].players[0].name, "Player 1");
+    teams[0].players[0].kitNumber = 10;
+    teams[0].players[0].age = 20;
+    teams[0].activeSize++;
 
-    printf("Select team (0-%d): ", teamCount - 1);
-    int teamIndex;
-    scanf("%d", &teamIndex);
+    // Print details
+    printf("Team: %s\n", teams[0].name);
+    printf("Player: %s, Kit Number: %d, Age: %d\n",
+           teams[0].players[0].name,
+           teams[0].players[0].kitNumber,
+           teams[0].players[0].age);
 
-    if (teamIndex < 0 || teamIndex >= teamCount) {
-        printf("Invalid team selection.\n");
-        return;
-    }
-
-    team_t *team = &teams[teamIndex];
-    if (team->activeSize >= SQUAD_SIZE) {
-        printf("Team is full.\n");
-        return;
-    }
-
-    player_t *player = &team->players[team->activeSize];
-    printf("Enter player name: ");
-    scanf("%s", player->name);
-
-    printf("Enter kit number: ");
-    scanf("%d", &player->kitNumber);
-
-    printf("Enter date of birth (dd mm yyyy): ");
-    scanf("%d %d %d", &player->dob.day, &player->dob.month, &player->dob.year);
-
-    printf("Enter position: ");
-    scanf("%s", player->position);
-
-    team->activeSize++;
-    printf("Player added successfully.\n");
+    return 0;
 }
