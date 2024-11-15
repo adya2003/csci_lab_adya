@@ -1,56 +1,55 @@
 #include <stdio.h>
 
-void process_transactions(int transactions[], int num_transactions, int initial_balance) {
-    int balance = initial_balance;
-    int tobeprocessed[num_transactions];
-    int tobeprocessed_count = 0;  
-    for (int i = 0; i < num_transactions; i++) {
-        int transaction = transactions[i];
-
-        if (transaction > 0) {
-            balance += transaction;
-        }
-        
-        else if (transaction < 0) {
-            if (balance + transaction < 0) { 
-                printf("Transaction %d (amount %d) skipped due to insufficient balance.\n", i, transaction);
-                tobeprocessed[tobeprocessed_count++] = transaction;  
-                continue;
-            }
-            else {
-                balance += transaction;  
-            }
-        }
-
-        if (balance == 0) {
-            printf("Balance reached zero. Stopping further transactions.\n");
-            
-            for (int j = i + 1; j < num_transactions; j++) {
-                tobeprocessed[tobeprocessed_count++] = transactions[j];
-            }
-            break;
-        }
-    }
-
-    printf("Final balance: %d AED\n", balance);
-
-    if (tobeprocessed_count > 0) {
-        printf("Unprocessed transactions:\n");
-        for (int i = 0; i < tobeprocessed_count; i++) {
-            printf("%d ", tobeprocessed[i]);
-        }
-        printf("\n");
-    } else {
-        printf("All transactions were processed.\n");
-    }
-}
+void process_transactions(int transactions[], int size);
 
 int main() {
+    // Example array of transactions
     int transactions[] = {200, -150, -500, -400, -50, -200, 300};
-    int num_transactions = sizeof(transactions) / sizeof(transactions[0]);
-    int initial_balance = 1000;
+    int size = sizeof(transactions) / sizeof(transactions[0]);
 
-    process_transactions(transactions, num_transactions, initial_balance);
+    printf("Initial transactions: ");
+    for (int i = 0; i < size; i++) {
+        printf("%d ", transactions[i]);
+    }
+    printf("\n");
+
+    // Process the transactions
+    process_transactions(transactions, size);
 
     return 0;
+}
+
+// Function to process transactions
+void process_transactions(int transactions[], int size) {
+    int balance = 1000; // Initial balance
+    int tobeprocessed[size]; // Array for unprocessed transactions
+    int tobeprocessed_count = 0; // Count of unprocessed transactions
+
+    printf("\nProcessing transactions...\n");
+    for (int i = 0; i < size; i++) {
+        if (transactions[i] < 0 && balance + transactions[i] < 0) {
+            // Invalid withdrawal
+            printf("Invalid withdrawal: %d (Exceeds balance: %d)\n", transactions[i], balance);
+            tobeprocessed[tobeprocessed_count++] = transactions[i];
+        } else if (balance == 0) {
+            // Balance is zero, stop processing further
+            printf("Balance is zero. No further transactions will be processed.\n");
+            tobeprocessed[tobeprocessed_count++] = transactions[i];
+            break;
+        } else {
+            // Valid transaction
+            balance += transactions[i];
+            printf("Processed transaction: %d, New balance: %d\n", transactions[i], balance);
+        }
+    }
+
+    // Print the final balance
+    printf("\nFinal balance: %d\n", balance);
+
+    // Print the unprocessed transactions
+    printf("Unprocessed transactions: ");
+    for (int i = 0; i < tobeprocessed_count; i++) {
+        printf("%d ", tobeprocessed[i]);
+    }
+    printf("\n");
 }
