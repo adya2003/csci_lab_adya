@@ -1,124 +1,176 @@
 #include <webots/robot.h>
-#include <webots/motor.h>
-#include <webots/distance_sensor.h>
 #include <webots/light_sensor.h>
+#include <webots/distance_sensor.h>
+#include <webots/motor.h>
 #include <stdio.h>
+#include <math.h>
 
 #define TIME_STEP 32
-#define MAX_SPEED 6.28 // e-puck motor max speed
+#define MAX_SPEED 6.28
+#define TOLERANCE 5.0  // Tolerance for detecting the brightest light
+#define STOP_TIME 233.568  // Time to stop in seconds (0:03:53:568)
+#define PAUSE_DURATION 60.0  // Pause duration in seconds
 
-// Device Tags
+// Sensor and motor tags
 WbDeviceTag left_motor, right_motor;
-WbDeviceTag distance_sensor[3]; // Left, front, right
-WbDeviceTag light_sensor[8];    // 8 light sensors
+WbDeviceTag ps[8];  // 8 proximity sensors
+WbDeviceTag light_sensor;
 
-// Track visited places to avoid loops
-int visited[100][100] = {0};  // Grid for storing visited locations (e.g., 100x100 maze)
-int current_x = 50, current_y = 50; // Start at the center of the grid
+bool first_move = true;
+bool navigation_to_station = false;
+bool paused = false;
+bool pause_complete = false;
+double pause_start_time = 0.0;
 
-// Helper functions for robot initialization and movement
-void initialize_robot() {
-    wb_robot_init();
+double max_light_intensity = 0.0;  // Tracks the brightest light intensity
+double current_light_intensity = 0.0;  // Current light sensor value
 
-    left_motor = wb_robot_get_device("left wheel motor");
-    right_motor = wb_robot_get_device("right wheel motor");
-    wb_motor_set_position(left_motor, INFINITY);
-    wb_motor_set_position(right_motor, INFINITY);
+bool found_brightest_light = false;  // Flag to stop movement once the brightest light is found
 
-    distance_sensor[0] = wb_robot_get_device("ps5");  // Left
-    distance_sensor[1] = wb_robot_get_device("ps7");  // Front
-    distance_sensor[2] = wb_robot_get_device("ps2");  // Right
+// Initialize devices
+void initialize_devices() {
+  left_motor = wb_robot_get_device("left wheel motor");
+  right_motor = wb_robot_get_device("right wheel motor");
+  if (left_motor == NULL || right_motor == NULL) {
+    printf("Error: Motors not found!\n");
+    return;
+  }
 
-    for (int i = 0; i < 3; i++) {
-        wb_distance_sensor_enable(distance_sensor[i], TIME_STEP);
+  wb_motor_set_position(left_motor, INFINITY);
+  wb_motor_set_position(right_motor, INFINITY);
+
+  // Initialize proximity sensors
+  for (int i = 0; i < 8; i++) {
+    char sensor_name[4];
+    sprintf(sensor_name, "ps%d", i);
+    ps[i] = wb_robot_get_device(sensor_name);
+    wb_distance_sensor_enable(ps[i], TIME_STEP);
+  }
+
+  // Initialize light sensor
+  light_sensor = wb_robot_get_device("ls0");
+  if (light_sensor == NULL) {
+    printf("Error: Light sensor not found!\n");
+    return;
+  }
+  wb_light_sensor_enable(light_sensor, TIME_STEP);
+}
+
+// Process sensors and control the robot
+void process_sensors_and_control() {
+  double current_time = wb_robot_get_time();
+
+  // Check if it's time to pause
+  if (current_time >= STOP_TIME && !paused && !pause_complete) {
+    printf("Pause initiated at time: %f seconds\n", current_time);
+    wb_motor_set_velocity(left_motor, 0.0);
+    wb_motor_set_velocity(right_motor, 0.0);
+    paused = true;
+    pause_start_time = current_time;
+    return;
+  }
+
+  // If paused, check if the pause duration is over
+  if (paused) {
+    if (current_time - pause_start_time >= PAUSE_DURATION) {
+      printf("Resuming navigation to station at time: %f seconds\n", current_time);
+      paused = false;
+      pause_complete = true;  // Ensure pause logic doesn't trigger again
+      navigation_to_station = true;
+    } else {
+      return;  // Stay paused
+    }
+  }
+
+  // Navigate to the station
+  if (navigation_to_station && !found_brightest_light) {
+    current_light_intensity = wb_light_sensor_get_value(light_sensor);
+
+    // Track the brightest light intensity during exploration
+    if (current_light_intensity > max_light_intensity) {
+      max_light_intensity = current_light_intensity;
+      printf("New brightest light intensity recorded: %f\n", max_light_intensity);
     }
 
-    for (int i = 0; i < 8; i++) {
-        char sensor_name[5];
-        sprintf(sensor_name, "ls%d", i); // Light sensor names: ls0, ls1, ..., ls7
-        light_sensor[i] = wb_robot_get_device(sensor_name);
-        wb_light_sensor_enable(light_sensor[i], TIME_STEP);
+    // If the current light intensity is close enough to the brightest value, stop
+    if (fabs(current_light_intensity - max_light_intensity) < TOLERANCE) {
+      printf("Station reached with light intensity: %f. Stopping.\n", current_light_intensity);
+      wb_motor_set_velocity(left_motor, 0.0);
+      wb_motor_set_velocity(right_motor, 0.0);
+      found_brightest_light = true;  // Mark that the brightest light has been found
+      return;
     }
-}
 
-void move_forward() {
-    wb_motor_set_velocity(left_motor, MAX_SPEED);
-    wb_motor_set_velocity(right_motor, MAX_SPEED);
-    wb_robot_step(500);  // Short step to avoid overshooting
-    current_y++;  // Update grid location
-}
+    // Movement logic to navigate towards the brightest light
+    double left_speed = 0.5 * MAX_SPEED;
+    double right_speed = 0.5 * MAX_SPEED;
 
-void turn_left() {
-    wb_motor_set_velocity(left_motor, -0.5 * MAX_SPEED);
-    wb_motor_set_velocity(right_motor, 0.5 * MAX_SPEED);
-    wb_robot_step(500);
-}
-
-void turn_right() {
-    wb_motor_set_velocity(left_motor, 0.5 * MAX_SPEED);
-    wb_motor_set_velocity(right_motor, -0.5 * MAX_SPEED);
-    wb_robot_step(500);
-}
-
-int detect_obstacle(int sensor_index) {
-    double value = wb_distance_sensor_get_value(distance_sensor[sensor_index]);
-    return value > 80.0;  // Adjust threshold for obstacle detection
-}
-
-int find_brightest_light() {
-    int brightest_index = -1;
-    double max_intensity = -1.0;
-
-    for (int i = 0; i < 8; i++) {
-        double intensity = wb_light_sensor_get_value(light_sensor[i]);
-        if (intensity > max_intensity) {
-            max_intensity = intensity;
-            brightest_index = i;
-        }
+    if (current_light_intensity < max_light_intensity) {
+      // Adjust direction if needed (simulate a turn)
+      left_speed = 0.2 * MAX_SPEED;
+      right_speed = 0.8 * MAX_SPEED;
     }
-    return brightest_index;
+
+    wb_motor_set_velocity(left_motor, left_speed);
+    wb_motor_set_velocity(right_motor, right_speed);
+    return;
+  }
+
+  // Default exploration logic (before navigation starts or if already paused)
+  double ps_values[8];
+  for (int i = 0; i < 8; i++) {
+    ps_values[i] = wb_distance_sensor_get_value(ps[i]);
+  }
+
+  // Default movement logic
+  double left_speed = MAX_SPEED;
+  double right_speed = MAX_SPEED;
+
+  bool front_obstacle = ps_values[0] > 80.0 || ps_values[7] > 80.0;
+  bool side_left = ps_values[5] > 80.0;
+  bool side_right = ps_values[2] > 80.0;
+
+  if (front_obstacle) {
+    if (side_left && side_right) {
+      left_speed = -0.5 * MAX_SPEED;
+      right_speed = -0.5 * MAX_SPEED;
+    } else if (side_left) {
+      left_speed = MAX_SPEED;
+      right_speed = 0.1 * MAX_SPEED;
+    } else if (side_right) {
+      left_speed = 0.1 * MAX_SPEED;
+      right_speed = MAX_SPEED;
+    } else {
+      left_speed = MAX_SPEED;
+      right_speed = -0.1 * MAX_SPEED;
+    }
+  } else {
+    if (side_left && !side_right) {
+      left_speed = 0.1 * MAX_SPEED;
+      right_speed = MAX_SPEED;
+    } else if (!side_left && !side_right) {
+      left_speed = 0.5 * MAX_SPEED;
+      right_speed = 0.5 * MAX_SPEED;
+    } else if (!side_left && side_right) {
+      left_speed = 0.1 * MAX_SPEED;
+      right_speed = MAX_SPEED;
+    }
+  }
+
+  // Set motor speeds
+  wb_motor_set_velocity(left_motor, left_speed);
+  wb_motor_set_velocity(right_motor, right_speed);
 }
 
-void mark_visited() {
-    visited[current_x][current_y] = 1;  // Mark current location as visited
-}
-
-int is_visited(int x, int y) {
-    return visited[x][y];  // Check if this location has been visited
-}
-
-// Main control loop for the robot
 int main() {
-    initialize_robot();
+  wb_robot_init();
 
-    while (wb_robot_step(TIME_STEP) != -1) {
-        mark_visited();  // Mark current position to avoid loops
+  initialize_devices();
 
-        int front_obstacle = detect_obstacle(1);
-        int left_obstacle = detect_obstacle(0);
-        int right_obstacle = detect_obstacle(2);
+  while (wb_robot_step(TIME_STEP) != -1) {
+    process_sensors_and_control();
+  }
 
-        if (!left_obstacle && !is_visited(current_x - 1, current_y)) {
-            turn_left();
-            current_x--;
-        } else if (!front_obstacle && !is_visited(current_x, current_y + 1)) {
-            move_forward();
-        } else if (!right_obstacle && !is_visited(current_x + 1, current_y)) {
-            turn_right();
-            current_x++;
-        } else {
-            // Dead-end or loop detected, backtrack
-            turn_left();  
-        }
-
-        int brightest = find_brightest_light();
-        if (brightest != -1) {
-            printf("Brightest light found at sensor: %d\n", brightest);
-            stop_robot();
-            break;  // Stop once the brightest light is found
-        }
-    }
-
-    wb_robot_cleanup();
-    return 0;
+  wb_robot_cleanup();
+  return 0;
 }
