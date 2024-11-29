@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Function to validate if a string is a valid float
+int isValidFloat(const char *str) {
+    char *endPtr;
+    strtod(str, &endPtr);
+    return (*endPtr == '\0'); // Valid if endPtr points to the null character
+}
+
+// Function to process a single line and determine validity
+void processLine(const char *line, FILE *outputFile, int *invalidCount) {
+    if (isValidFloat(line)) {
+        fprintf(outputFile, "%f\n", atof(line)); // Write valid float to output file
+    } else {
+        (*invalidCount)++; // Increment invalid count
+    }
+}
+
+// Function to process the file and filter valid floats
+void processFile(const char *inputFileName, const char *outputFileName) {
+    FILE *inputFile = fopen(inputFileName, "r");
+    FILE *outputFile = fopen(outputFileName, "w");
+    char buffer[50];
+    int invalidCount = 0;
+
+    // Verify files are successfully opened
+    if (!inputFile) {
+        printf("Error: Could not open input file '%s' for reading.\n", inputFileName);
+        return;
+    }
+    if (!outputFile) {
+        printf("Error: Could not open output file '%s' for writing.\n", outputFileName);
+        fclose(inputFile);
+        return;
+    }
+
+    // Process each line in the input file
+    while (fscanf(inputFile, "%49s", buffer) != EOF) {
+        processLine(buffer, outputFile, &invalidCount);
+    }
+
+    // Check for errors in file reading
+    if (ferror(inputFile)) {
+        printf("Error: A problem occurred while reading the input file.\n");
+    } else {
+        printf("Processing complete. Invalid float values: %d\n", invalidCount);
+    }
+
+    // Close files
+    fclose(inputFile);
+    fclose(outputFile);
+}
+
+int main() {
+    const char *inputFileName = "data.txt";
+    const char *outputFileName = "output.txt";
+
+    processFile(inputFileName, outputFileName);
+
+    return 0;
+}
