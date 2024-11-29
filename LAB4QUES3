@@ -1,0 +1,49 @@
+#include <iostream>
+#include <iomanip>
+
+using namespace std;
+
+// Function to print a real number with specified field width and precision
+void print_real(float number, int fieldspace, int precision) {
+    cout << fixed                      // Use fixed-point notation
+         << setw(fieldspace)           // Set the field width
+         << setprecision(precision)    // Set the precision
+         << number << endl;            // Output the formatted number
+}
+
+// Template function to update m1 and m2
+template <typename T>
+void update_scale(T& m1, T& m2, T m3 = 10) {
+    // Temporary variables to store the original values
+    T temp_m1 = m1;
+    T temp_m2 = m2;
+
+    // Update the variables
+    m1 = (temp_m1 + temp_m2) * m3;  // Update m1: (m1 + m2) * m3
+    m2 = (temp_m1 - temp_m2) * m3;  // Update m2: (m1 - m2) * m3
+}
+
+int main() {
+    // Section 1: Testing the print_real function
+    cout << "Testing print_real function:" << endl;
+    float number = 456.78901;
+    int fieldspace = 15;
+    int precision = 2;
+
+    // Display the real number with formatting
+    print_real(number, fieldspace, precision);
+
+    // Section 2: Testing the update_scale function
+    cout << "\nTesting update_scale function:" << endl;
+    int a = 7, b = 2;
+
+    // Display initial values
+    cout << "Initial values: a = " << a << ", b = " << b << endl;
+
+    // Call update_scale to update a and b values
+    update_scale(a, b);
+
+    // Display updated values
+    cout << "Updated values: a = " << a << ", b = " << b << endl;
+    return 0;
+}
